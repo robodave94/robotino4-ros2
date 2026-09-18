@@ -36,6 +36,7 @@ private:
 	rclcpp::TimerBase::SharedPtr timer_;
 	std::string hostname_;
 	std::string frame_prefix_;
+	bool enable_bumper_, enable_distance_sensors_;
 	double max_linear_vel_, min_linear_vel_, max_angular_vel_, min_angular_vel_;
 	std::vector<float> motor_velocities_;
 	std::vector<int> motor_positions_;

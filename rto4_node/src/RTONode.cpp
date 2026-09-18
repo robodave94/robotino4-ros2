@@ -29,6 +29,8 @@ RTONode::RTONode():
 	this->declare_parameter("max_angular_vel", 1.0);
 	this->declare_parameter("min_angular_vel", 0.1);
 	this->declare_parameter("frame_prefix", "");
+	this->declare_parameter("enable_bumper", true);
+	this->declare_parameter("enable_distance_sensors", true);
 
  	hostname_ = this->get_parameter("hostname").as_string();
 	
@@ -36,6 +38,8 @@ RTONode::RTONode():
 	min_linear_vel_ = this->get_parameter("min_linear_vel").as_double();
 	max_angular_vel_ = this->get_parameter("max_angular_vel").as_double();
 	min_angular_vel_ = this->get_parameter("min_angular_vel").as_double();
+	enable_bumper_ = this->get_parameter("enable_bumper").as_bool();
+	enable_distance_sensors_ = this->get_parameter("enable_distance_sensors").as_bool();
 
 	std::string fp = this->get_parameter("frame_prefix").as_string();
 	frame_prefix_ = fp.empty() ? "" : fp + "/";
@@ -66,10 +70,10 @@ void RTONode::initModules()
 
 	// Set the ComIds
 	analog_input_array_.setComId( com_.id() );
-	bumper_.setComId( com_.id() );
+	if( enable_bumper_ ) bumper_.setComId( com_.id() );
 	digital_input_array_.setComId( com_.id() );
 	digital_output_array_.setComId( com_.id() );
-	distance_sensor_array_.setComId( com_.id() );
+	if( enable_distance_sensors_ ) distance_sensor_array_.setComId( com_.id() );
 	encoder_input_.setComId( com_.id() );
 	gyroscope_.setComId( com_.id() );
 	motor_array_.setComId( com_.id() );
@@ -111,7 +115,7 @@ void RTONode::publishDistanceMsg()
 //		clearing_time_ = curr_time_;
 //		distances_clearing_pub_.publish( distances_clearing_msg_ );
 //	}
-	distances_clearing_pub_->publish( distances_clearing_msg_ );
+	if( enable_distance_sensors_ ) distances_clearing_pub_->publish( distances_clearing_msg_ );
 }
 
 void RTONode::publishJointStateMsg()
