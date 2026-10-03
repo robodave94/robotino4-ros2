@@ -19,6 +19,24 @@ list(APPEND CMAKE_MODULE_PATH "/usr/local/robotino/api2/cmake" "/opt/robotino/cm
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
+
+# ── Architecture guard ──────────────────────────────────────────────────────
+# rto4_node links the closed-source Robotino API 2 vendor libraries, which
+# openrobotino.org only ships for amd64. On arm64/arm hosts (e.g. the native Pi
+# "bulk" container) there is no API to link against, so skip ALL targets and
+# finish the package early: `colcon build` then succeeds on any architecture
+# without needing --packages-skip. The amd64 "bridge" image is where the real
+# nodes get built. (This is intentionally keyed on arch, not on find_package
+# success, so an amd64 build still hard-fails loudly if the vendor debs are
+# missing instead of silently producing no nodes.)
+if(CMAKE_SYSTEM_PROCESSOR MATCHES "^(aarch64|arm64|arm)")
+  message(WARNING
+    "rto4_node: ${CMAKE_SYSTEM_PROCESSOR} detected — skipping build "
+    "(RobotinoAPI2 is amd64-only; expected on the arm64 Pi bulk image).")
+  ament_package()
+  return()
+endif()
+
 find_package(rclcpp REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
