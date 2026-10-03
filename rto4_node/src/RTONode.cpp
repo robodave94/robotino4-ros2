@@ -6,24 +6,24 @@
  */
 
 #include "RTONode.h"
+#include "JointStateMath.h"
 
 using namespace std::chrono_literals;
 
-RTONode::RTONode():
-	Node("rto4_node"),
-	analog_input_array_(this),
-	bumper_(this),
-	com_(this),
-	digital_input_array_(this),
-	digital_output_array_(this),
-	distance_sensor_array_(this),
-	encoder_input_(this),
-	gyroscope_(this),
-	motor_array_(this),
-	omni_drive_(this),
-	power_management_(this)
+RTONode::RTONode() : Node("rto4_node"),
+					 analog_input_array_(this),
+					 bumper_(this),
+					 com_(this),
+					 digital_input_array_(this),
+					 digital_output_array_(this),
+					 distance_sensor_array_(this),
+					 encoder_input_(this),
+					 gyroscope_(this),
+					 motor_array_(this),
+					 omni_drive_(this),
+					 power_management_(this)
 {
-	this->declare_parameter("hostname","172.26.1.1");
+	this->declare_parameter("hostname", "172.26.1.1");
 	this->declare_parameter("max_linear_vel", 2.3);
 	this->declare_parameter("min_linear_vel", 0.02);
 	this->declare_parameter("max_angular_vel", 1.0);
@@ -32,8 +32,8 @@ RTONode::RTONode():
 	this->declare_parameter("enable_bumper", true);
 	this->declare_parameter("enable_distance_sensors", true);
 
- 	hostname_ = this->get_parameter("hostname").as_string();
-	
+	hostname_ = this->get_parameter("hostname").as_string();
+
 	max_linear_vel_ = this->get_parameter("max_linear_vel").as_double();
 	min_linear_vel_ = this->get_parameter("min_linear_vel").as_double();
 	max_angular_vel_ = this->get_parameter("max_angular_vel").as_double();
@@ -51,9 +51,9 @@ RTONode::RTONode():
 	RCLCPP_INFO(this->get_logger(), "Connecting to Robotino with host IP %s\n", hostname_.c_str());
 
 	distances_clearing_pub_ = this->create_publisher<sensor_msgs::msg::PointCloud>("/distance_sensors_clearing", 10);
-	joint_states_pub_= this->create_publisher<sensor_msgs::msg::JointState>("/rto4_joint_states", 10);
+	joint_states_pub_ = this->create_publisher<sensor_msgs::msg::JointState>("/rto4_joint_states", 10);
 
-	com_.setName( "RTONode" );
+	com_.setName("RTONode");
 
 	initModules();
 	initMsgs();
@@ -66,33 +66,35 @@ RTONode::~RTONode()
 
 void RTONode::initModules()
 {
-	com_.setAddress( hostname_.c_str() );
+	com_.setAddress(hostname_.c_str());
 
 	// Set the ComIds
-	analog_input_array_.setComId( com_.id() );
-	if( enable_bumper_ ) bumper_.setComId( com_.id() );
-	digital_input_array_.setComId( com_.id() );
-	digital_output_array_.setComId( com_.id() );
-	if( enable_distance_sensors_ ) distance_sensor_array_.setComId( com_.id() );
-	encoder_input_.setComId( com_.id() );
-	gyroscope_.setComId( com_.id() );
-	motor_array_.setComId( com_.id() );
-	omni_drive_.setComId( com_.id() );
-	power_management_.setComId( com_.id() );
-	omni_drive_.setMaxMin(max_linear_vel_, min_linear_vel_, max_angular_vel_, min_angular_vel_ );
-	com_.connectToServer( false );
+	analog_input_array_.setComId(com_.id());
+	if (enable_bumper_)
+		bumper_.setComId(com_.id());
+	digital_input_array_.setComId(com_.id());
+	digital_output_array_.setComId(com_.id());
+	if (enable_distance_sensors_)
+		distance_sensor_array_.setComId(com_.id());
+	encoder_input_.setComId(com_.id());
+	gyroscope_.setComId(com_.id());
+	motor_array_.setComId(com_.id());
+	omni_drive_.setComId(com_.id());
+	power_management_.setComId(com_.id());
+	omni_drive_.setMaxMin(max_linear_vel_, min_linear_vel_, max_angular_vel_, min_angular_vel_);
+	com_.connectToServer(false);
 }
 
 void RTONode::initMsgs()
 {
 	distances_clearing_msg_.header.frame_id = frame_prefix_ + "base_link";
 	distances_clearing_msg_.header.stamp = curr_time_;
-	distances_clearing_msg_.points.resize( 720 );
+	distances_clearing_msg_.points.resize(720);
 
-	for( unsigned int i = 0; i < distances_clearing_msg_.points.size(); ++i )
+	for (unsigned int i = 0; i < distances_clearing_msg_.points.size(); ++i)
 	{
-		distances_clearing_msg_.points[i].x = 5.0 * cos(  0.008727 ); // 0.008727 = 0.5 degrees in radians
-		distances_clearing_msg_.points[i].y = 5.0 * sin(  0.008727 );
+		distances_clearing_msg_.points[i].x = 5.0 * cos(0.008727); // 0.008727 = 0.5 degrees in radians
+		distances_clearing_msg_.points[i].y = 5.0 * sin(0.008727);
 		distances_clearing_msg_.points[i].z = 0.05; // 5cm above ground
 	}
 
@@ -109,29 +111,30 @@ void RTONode::initMsgs()
 
 void RTONode::publishDistanceMsg()
 {
-//	curr_time_ = ros::Time::now();
-//	if( ( curr_time_ - clearing_time_ ).toSec() > 1 )
-//	{
-//		clearing_time_ = curr_time_;
-//		distances_clearing_pub_.publish( distances_clearing_msg_ );
-//	}
-	if( enable_distance_sensors_ ) distances_clearing_pub_->publish( distances_clearing_msg_ );
+	//	curr_time_ = ros::Time::now();
+	//	if( ( curr_time_ - clearing_time_ ).toSec() > 1 )
+	//	{
+	//		clearing_time_ = curr_time_;
+	//		distances_clearing_pub_.publish( distances_clearing_msg_ );
+	//	}
+	if (enable_distance_sensors_)
+		distances_clearing_pub_->publish(distances_clearing_msg_);
 }
 
 void RTONode::publishJointStateMsg()
 {
-	motor_array_.getMotorReadings( motor_velocities_, motor_positions_ );
+	motor_array_.getMotorReadings(motor_velocities_, motor_positions_);
 
-	joint_state_msg_.velocity[0] = ( ( motor_velocities_[2] / 16 ) * (2 * 3.142) / 60 );
-	joint_state_msg_.velocity[1] = ( ( motor_velocities_[0] / 16 ) * (2 * 3.142) / 60 );
-	joint_state_msg_.velocity[2] = ( ( motor_velocities_[1] / 16 ) * (2 * 3.142) / 60 );
+	joint_state_msg_.velocity[0] = rto4::motorVelToWheelRad(motor_velocities_[2]);
+	joint_state_msg_.velocity[1] = rto4::motorVelToWheelRad(motor_velocities_[0]);
+	joint_state_msg_.velocity[2] = rto4::motorVelToWheelRad(motor_velocities_[1]);
 
-	joint_state_msg_.position[0] = ( motor_positions_[2] / 16 ) * (2 * 3.142);
-	joint_state_msg_.position[1] = ( motor_positions_[0] / 16 ) * (2 * 3.142);
-	joint_state_msg_.position[2] = ( motor_positions_[1] / 16 ) * (2 * 3.142);
+	joint_state_msg_.position[0] = rto4::motorPosToWheelRad(motor_positions_[2]);
+	joint_state_msg_.position[1] = rto4::motorPosToWheelRad(motor_positions_[0]);
+	joint_state_msg_.position[2] = rto4::motorPosToWheelRad(motor_positions_[1]);
 
 	joint_state_msg_.header.stamp = curr_time_;
-	joint_states_pub_->publish( joint_state_msg_ );
+	joint_states_pub_->publish(joint_state_msg_);
 }
 
 void RTONode::spin()
@@ -149,4 +152,3 @@ void RTONode::spin()
 	publishJointStateMsg();
 	com_.processEvents();
 }
-

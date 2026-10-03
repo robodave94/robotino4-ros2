@@ -133,6 +133,21 @@ target_link_libraries(
   ${REC_ROBOTINO_API2_LIBRARY}
 )
 
+add_executable(
+  rto4_node_emb_streamline
+  src/rto4_node_emb_streamline.cpp
+  src/ComROS.cpp
+  src/OmniDriveROS.cpp
+  src/RTOEmbStreamlineNode.cpp
+)
+
+ament_target_dependencies(rto4_node_emb_streamline rclcpp rto4_msgs std_msgs geometry_msgs sensor_msgs tf2 tf2_ros tf2_geometry_msgs nav_msgs builtin_interfaces)
+
+target_link_libraries(
+  rto4_node_emb_streamline
+  ${REC_ROBOTINO_API2_LIBRARY}
+)
+
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
   # the following line skips the linter which checks for copyrights
@@ -142,6 +157,21 @@ if(BUILD_TESTING)
   # uncomment the line when this package is not in a git repo
   #set(ament_cmake_cpplint_FOUND TRUE)
   ament_lint_auto_find_test_dependencies()
+
+  # CPU performance benchmarks (no Robotino needed). Only compiled on amd64
+  # since the arch guard above early-returns on arm. See test/test_rto4_perf.cpp.
+  find_package(ament_cmake_gtest REQUIRED)
+  ament_add_gtest(test_rto4_perf
+    test/test_rto4_perf.cpp
+    src/ComROS.cpp
+    src/OdometryROS.cpp
+    src/OmniDriveROS.cpp
+    src/RTOEmbStreamlineNode.cpp)
+  if(TARGET test_rto4_perf)
+    target_include_directories(test_rto4_perf PRIVATE include/rto4_node /usr/local/robotino/api2)
+    ament_target_dependencies(test_rto4_perf rclcpp rto4_msgs std_msgs geometry_msgs sensor_msgs tf2 tf2_ros tf2_geometry_msgs nav_msgs builtin_interfaces)
+    target_link_libraries(test_rto4_perf ${REC_ROBOTINO_API2_LIBRARY})
+  endif()
 endif()
 
 install(TARGETS
@@ -149,6 +179,7 @@ install(TARGETS
   rto4_camera_node
   rto4_laserrangefinder_node
   rto4_odometry_node
+  rto4_node_emb_streamline
   DESTINATION lib/${PROJECT_NAME})
 
 ament_package()

@@ -19,14 +19,22 @@
 
 #include <string>
 
-class OdometryROS: public rec::robotino::api2::Odometry
+class OdometryROS : public rec::robotino::api2::Odometry
 {
 public:
-	OdometryROS(rclcpp::Node* parent_node, const std::string& frame_prefix = "");
+	OdometryROS(rclcpp::Node *parent_node, const std::string &frame_prefix = "");
 	~OdometryROS();
 
 	void setTimeStamp(rclcpp::Time stamp);
-	void setFramePrefix(const std::string& fp) { frame_prefix_ = fp; }
+	void setFramePrefix(const std::string &fp) { frame_prefix_ = fp; }
+
+	// Builds the odom message + TF (no publish, no live Com needed) so perf
+	// tests can time the exact production hot path off-hardware.
+	void benchmarkBuildOdometry(double x, double y, double phi,
+								float vx, float vy, float omega)
+	{
+		buildOdometryMessages(x, y, phi, vx, vy, omega);
+	}
 
 private:
 	rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr odometry_pub_;
@@ -41,12 +49,13 @@ private:
 	std::string frame_prefix_;
 	rclcpp::Time stamp_;
 
-
+	void buildOdometryMessages(double x, double y, double phi,
+							   float vx, float vy, float omega);
 	void readingsEvent(double x, double y, double phi,
-			float vx, float vy, float omega, unsigned int sequence );
+					   float vx, float vy, float omega, unsigned int sequence);
 	bool resetOdometryCallback(
-			rto4_msgs::srv::ResetOdometry::Request::SharedPtr req,
-			rto4_msgs::srv::ResetOdometry::Response::SharedPtr res);
+		rto4_msgs::srv::ResetOdometry::Request::SharedPtr req,
+		rto4_msgs::srv::ResetOdometry::Response::SharedPtr res);
 };
 
 #endif /* ODOMETRYROS_H_ */
