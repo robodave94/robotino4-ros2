@@ -9,7 +9,7 @@
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 
-  <exec_depend>rto4_node</exec_depend>
+  <exec_depend condition="$PI_BUILD != 1">rto4_node</exec_depend>
   <exec_depend>rto4_description</exec_depend>
   <exec_depend>robot_state_publisher</exec_depend>
   <!-- Visualisation-only: dropped on a headless Pi build (PI_BUILD=1). -->
