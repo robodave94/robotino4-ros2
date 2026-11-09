@@ -4,8 +4,8 @@
  * CPU performance benchmarks for the Robotino driver hot paths, run via
  * `colcon test`. They are INDEPENDENT of whether a Robotino is present: each
  * exercises only the on-CPU message-building / math that runs every control
- * tick, with no live Com connection. On the amd64/QEMU bridge image these
- * numbers tell us whether emulation can sustain the 5 Hz (200 ms) loop budget.
+ * tick, with no live Com connection. These numbers tell us whether the
+ * software path sustains the 5 Hz (200 ms) loop budget before hardware tests.
  *
  * By default the test only measures and prints a summary table (always passes).
  * Set RTO4_PERF_ASSERT=1 to also fail if any op blows a generous per-tick
@@ -162,7 +162,7 @@ TEST(Rto4Perf, HotPaths)
     if (do_assert)
     {
         // Generous per-tick budgets; opt-in so native dev `colcon test` stays
-        // green while the QEMU evaluation can enforce a go/no-go threshold.
+        // green while CI/performance runs can enforce a go/no-go threshold.
         EXPECT_LT(s_odom.median_ns, 5000000.0) << "stock odometry build too slow for 5 Hz";
         EXPECT_LT(s_odom_s.median_ns, 5000000.0) << "streamline odometry build too slow for 5 Hz";
         EXPECT_LT(s_clamp.median_ns, 1000000.0) << "cmd_vel clamp too slow";

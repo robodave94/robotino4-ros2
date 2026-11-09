@@ -11,10 +11,17 @@ In addition, this stack does not use any python, only cpp and xml. The foundatio
 
 **Note:** Not all functionality has been enabled. North Star support, BHA support, and gripper support have been disabled.
 
+## Portable core migration
+
+The stack now builds against the in-tree [rto4_core package](rto4_core/README.md),
+which provides source-built REC RPC, Robotino RPC, fleetcom, cv_lt and API2
+libraries. This removes the previous amd64-only `.deb` runtime dependency from
+the ROS build path and allows compiling the stack for alternate architectures.
+Hardware validation is still required before field operation.
+
 ## Installation instructions for Host PC
-- Go to [[https://wiki.openrobotino.org/index.php?title=Robotino_OS]] and download the .deb files provided under Ubuntu 20.04 for robotino-dev, rec-rpc, and robotino-api2
-- Install the .deb files
 - Clone this repo into a ros2 workspace
+- Install build prerequisites (Qt 5 and JPEG development packages): `sudo apt-get install qtbase5-dev qtdeclarative5-dev libqt5xmlpatterns5-dev libjpeg-dev`
 - Install `teleop_twist_keyboard`: `sudo apt-get install ros-${ROS_DISTRO}-teleop-twist-keyboard`
 - Do `colcon build`
 - Source the workspace

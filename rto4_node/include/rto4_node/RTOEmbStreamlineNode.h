@@ -1,11 +1,10 @@
 /*
  * RTOEmbStreamlineNode.h
  *
- * Combined, QEMU-optimized Robotino odometry + drive node (rto4_node_emb_
- * streamline). Merges what rto4_core (drive) and rto4_odometry publish into ONE
- * process over a SINGLE Com connection / processEvents loop, which roughly
- * halves the per-process emulation + networking overhead of running the two
- * stock nodes separately on the amd64/QEMU bridge. Odometry uses a lean path:
+ * Combined, streamlined Robotino odometry + drive node (rto4_node_emb_
+ * streamline). Merges what rto4_core (drive) and rto4_odometry publish into
+ * one process over a single Com connection / processEvents loop. Odometry uses
+ * a lean path:
  * direct yaw-only quaternion (no tf2 setRPY/toMsg), cached heading, preallocated
  * reused messages, shallow QoS, and the node clock reused each tick.
  */

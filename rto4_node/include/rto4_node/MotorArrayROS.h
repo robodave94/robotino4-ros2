@@ -30,8 +30,8 @@ private:
 
 	rclcpp::Time stamp_;
 
-	void velocitiesChangedEvent( const float* velocities, unsigned int size );
-	void positionsChangedEvent( const float* positions, unsigned int size );
-	void currentsChangedEvent( const float* currents, unsigned int size );
+	void velocitiesChangedEvent( const float* velocities, unsigned int size ) override;
+	void positionsChangedEvent( const int* positions, unsigned int size ) override;
+	void currentsChangedEvent( const float* currents, unsigned int size ) override;
 };
 #endif /* MOTORARRAYROS_H_ */

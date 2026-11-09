@@ -1,0 +1,6 @@
+cmake_minimum_required(VERSION 3.16)
+project(rto4_core_consumer LANGUAGES CXX)
+find_package(rto4_core REQUIRED CONFIG)
+add_executable(installed_peer ../rpc_peer.cpp)
+target_compile_features(installed_peer PRIVATE cxx_std_14)
+target_link_libraries(installed_peer PRIVATE rto4_core::rpc)

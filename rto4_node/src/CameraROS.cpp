@@ -56,10 +56,17 @@ void CameraROS::imageReceivedEvent(
 		unsigned int height,
 		unsigned int step )
 {
-	(void)dataSize;
+	if (!streaming_pub_ || !data || width == 0 || height == 0 || step == 0)
+		return;
+
+	// Division avoids overflow while checking BGR row size and the complete buffer.
+	if (width > step / 3 || height > dataSize / step)
+		return;
+
 	// Build the Image msg
 	img_msg_.header.stamp = stamp_;
-	sensor_msgs::fillImage(img_msg_, "bgr8", height, width, step, data);
+	if (!sensor_msgs::fillImage(img_msg_, "bgr8", height, width, step, data))
+		return;
 
 	// Publish the Image & CameraInfo msgs
 	streaming_pub_->publish(img_msg_);

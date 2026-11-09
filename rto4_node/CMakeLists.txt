@@ -15,27 +15,8 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
 
-list(APPEND CMAKE_MODULE_PATH "/usr/local/robotino/api2/cmake" "/opt/robotino/cmake")
-
 # find dependencies
 find_package(ament_cmake REQUIRED)
-
-# ── Architecture guard ──────────────────────────────────────────────────────
-# rto4_node links the closed-source Robotino API 2 vendor libraries, which
-# openrobotino.org only ships for amd64. On arm64/arm hosts (e.g. the native Pi
-# "bulk" container) there is no API to link against, so skip ALL targets and
-# finish the package early: `colcon build` then succeeds on any architecture
-# without needing --packages-skip. The amd64 "bridge" image is where the real
-# nodes get built. (This is intentionally keyed on arch, not on find_package
-# success, so an amd64 build still hard-fails loudly if the vendor debs are
-# missing instead of silently producing no nodes.)
-if(CMAKE_SYSTEM_PROCESSOR MATCHES "^(aarch64|arm64|arm)")
-  message(WARNING
-    "rto4_node: ${CMAKE_SYSTEM_PROCESSOR} detected — skipping build "
-    "(RobotinoAPI2 is amd64-only; expected on the arm64 Pi bulk image).")
-  ament_package()
-  return()
-endif()
 
 find_package(rclcpp REQUIRED)
 find_package(std_msgs REQUIRED)
@@ -45,7 +26,7 @@ find_package(tf2_ros REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
-find_package(RobotinoAPI2 REQUIRED)
+find_package(rto4_core REQUIRED)
 find_package(rto4_msgs REQUIRED)
 find_package(builtin_interfaces REQUIRED)
 
@@ -56,7 +37,6 @@ find_package(builtin_interfaces REQUIRED)
 
 include_directories(
   include/rto4_node
-  /usr/local/robotino/api2
 )
 
 add_executable(
@@ -81,7 +61,7 @@ add_executable(
 
 target_link_libraries(
   rto4_node
-  ${REC_ROBOTINO_API2_LIBRARY}
+  rto4_core::api2
 )
 
 
@@ -100,7 +80,7 @@ ament_target_dependencies(rto4_laserrangefinder_node rclcpp rto4_msgs std_msgs g
 
 target_link_libraries(
   rto4_laserrangefinder_node
-  ${REC_ROBOTINO_API2_LIBRARY}
+  rto4_core::api2
 )
 
 add_executable(
@@ -115,7 +95,7 @@ ament_target_dependencies(rto4_camera_node rclcpp rto4_msgs std_msgs geometry_ms
 
 target_link_libraries(
   rto4_camera_node
-  ${REC_ROBOTINO_API2_LIBRARY}
+  rto4_core::api2
 )
 
 add_executable(
@@ -130,7 +110,7 @@ ament_target_dependencies(rto4_odometry_node rclcpp rto4_msgs std_msgs geometry_
 
 target_link_libraries(
   rto4_odometry_node
-  ${REC_ROBOTINO_API2_LIBRARY}
+  rto4_core::api2
 )
 
 add_executable(
@@ -145,7 +125,7 @@ ament_target_dependencies(rto4_node_emb_streamline rclcpp rto4_msgs std_msgs geo
 
 target_link_libraries(
   rto4_node_emb_streamline
-  ${REC_ROBOTINO_API2_LIBRARY}
+  rto4_core::api2
 )
 
 if(BUILD_TESTING)
@@ -168,9 +148,9 @@ if(BUILD_TESTING)
     src/OmniDriveROS.cpp
     src/RTOEmbStreamlineNode.cpp)
   if(TARGET test_rto4_perf)
-    target_include_directories(test_rto4_perf PRIVATE include/rto4_node /usr/local/robotino/api2)
+    target_include_directories(test_rto4_perf PRIVATE include/rto4_node)
     ament_target_dependencies(test_rto4_perf rclcpp rto4_msgs std_msgs geometry_msgs sensor_msgs tf2 tf2_ros tf2_geometry_msgs nav_msgs builtin_interfaces)
-    target_link_libraries(test_rto4_perf ${REC_ROBOTINO_API2_LIBRARY})
+    target_link_libraries(test_rto4_perf rto4_core::api2)
   endif()
 endif()
 
@@ -183,3 +163,28 @@ install(TARGETS
   DESTINATION lib/${PROJECT_NAME})
 
 ament_package()
+
+if(BUILD_TESTING)
+  find_package(tf2_msgs REQUIRED)
+  ament_add_gtest(test_rto4_adapters
+    test/test_rto4_adapters.cpp
+    src/AnalogInputArrayROS.cpp
+    src/BumperROS.cpp
+    src/CameraROS.cpp
+    src/DigitalInputArrayROS.cpp
+    src/DistanceSensorArrayROS.cpp
+    src/EncoderInputROS.cpp
+    src/GyroscopeROS.cpp
+    src/MotorArrayROS.cpp
+    src/OdometryROS.cpp
+    src/OmniDriveROS.cpp
+    src/PowerManagementROS.cpp
+    TIMEOUT 60)
+  if(TARGET test_rto4_adapters)
+    target_include_directories(test_rto4_adapters PRIVATE include/rto4_node)
+    ament_target_dependencies(test_rto4_adapters
+      rclcpp rto4_msgs std_msgs geometry_msgs sensor_msgs tf2 tf2_ros
+      tf2_geometry_msgs tf2_msgs nav_msgs builtin_interfaces)
+    target_link_libraries(test_rto4_adapters rto4_core::api2)
+  endif()
+endif()

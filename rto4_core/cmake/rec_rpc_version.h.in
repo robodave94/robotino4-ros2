@@ -1,0 +1,15 @@
+#pragma once
+#define MajorVer 1
+#define MinorVer 6
+#define PatchVer 0
+#define Suffix "-rto4"
+#define BuildVer 0
+#define BuildVerStr "unknown"
+#define VersionString "1.6.0-rto4"
+#define MyAppName "rto4_core_rpc"
+#define MyAppId "rto4_core_rpc"
+#define MyAppExeName ""
+#define MyCompany "REC GmbH"
+#define MyPublisherURL "www.servicerobotics.eu"
+#define MySupportURL "www.servicerobotics.eu"
+#define MyUpdatesURL "www.servicerobotics.eu"

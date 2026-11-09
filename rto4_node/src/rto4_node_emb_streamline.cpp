@@ -1,7 +1,7 @@
 /*
  * rto4_node_emb_streamline.cpp
  *
- * Entry point for the combined, QEMU-optimized odometry + drive node.
+ * Entry point for the combined streamlined odometry + drive node.
  */
 
 #include "RTOEmbStreamlineNode.h"

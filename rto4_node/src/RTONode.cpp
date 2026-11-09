@@ -125,13 +125,10 @@ void RTONode::publishJointStateMsg()
 {
 	motor_array_.getMotorReadings(motor_velocities_, motor_positions_);
 
-	joint_state_msg_.velocity[0] = rto4::motorVelToWheelRad(motor_velocities_[2]);
-	joint_state_msg_.velocity[1] = rto4::motorVelToWheelRad(motor_velocities_[0]);
-	joint_state_msg_.velocity[2] = rto4::motorVelToWheelRad(motor_velocities_[1]);
-
-	joint_state_msg_.position[0] = rto4::motorPosToWheelRad(motor_positions_[2]);
-	joint_state_msg_.position[1] = rto4::motorPosToWheelRad(motor_positions_[0]);
-	joint_state_msg_.position[2] = rto4::motorPosToWheelRad(motor_positions_[1]);
+	if (!rto4::populateWheelJointState(
+			motor_velocities_, motor_positions_,
+			joint_state_msg_.velocity, joint_state_msg_.position))
+		return;
 
 	joint_state_msg_.header.stamp = curr_time_;
 	joint_states_pub_->publish(joint_state_msg_);
